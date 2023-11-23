@@ -1,6 +1,7 @@
 #pragma once
-#include "../../ng.hpp"
 #include "../../console/include/console.hpp"
+#include "../../ng.hpp"
+
 
 struct BootDevices {
   u1 FourDevice;
@@ -77,7 +78,8 @@ struct MultibootData {
   // Implement others
 };
 
-struct MultibootController : LoadContradiction<MultibootController*, MultibootData*> {
-  MultibootData Data;
-  MultibootController * LoadResolve(MultibootData *Object) override;
+struct MultibootController
+    : LoadContradiction<MultibootController *, MultibootData *> {
+  MultibootData *Data;
+  MultibootController *LoadResolve(MultibootData *Object) override;
 };
