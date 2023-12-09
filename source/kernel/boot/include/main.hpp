@@ -14,3 +14,4 @@ extern "C" void *memcpy(void *dst, void *src, size_t len);
 extern "C" char *itoa(int value, char *str, int base);
 extern "C" void *memset(void *s, int c, size_t n);
 extern "C" size_t strlen(const char *str);
+extern "C" char *strcpy(char *s1, const char *s2);

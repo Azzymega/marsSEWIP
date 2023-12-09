@@ -28,3 +28,14 @@ Console *Console::LoadResolve(const char *Object) {
   }
   return nullptr;
 }
+
+Console *Console::LoadResolve(u4 *Object) {
+	char x[15];
+  this->LoadResolve(itoa(*Object, x, 10));
+  return nullptr;
+}
+
+void Console::base(u4 *Object, int base) {
+	char x[15];
+  this->LoadResolve(itoa(*Object, x, base));
+}

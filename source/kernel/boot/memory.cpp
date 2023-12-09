@@ -1,6 +1,9 @@
 #include "include/memory.hpp"
 
 extern Console *konsole;
+extern MMU *gc;
+extern "C" void loadPageDirectory(unsigned int *);
+extern "C" void enablePaging();
 
 MMU *MMU::LoadResolve(MultibootController *Object) {
   u4 y = 0;
@@ -43,6 +46,41 @@ MMU *MMU::LoadResolve(MultibootController *Object) {
   }
   return nullptr;
 }
+/*
+void MMU::SetupPaging(u4 *entry, page *pentry) {
+  for (int x = 0; x < 1024; x++) {
+    ((PageDirectoryEntry *)entry[x])->SupervisorFlag = 1;
+    ((PageDirectoryEntry *)entry[x])->ReadWriteFlag = 1;
+    ((PageDirectoryEntry *)entry[x])->PresentFlag = 0;
+  }
+  for (int i = 0; i < 1024; i++) {
+    //pentry[i] = (i * 0x1000) | 3;
+    //memset(&pentry[i], 0, sizeof(page));
+    pentry[i].frame = (0x1000 >> 12)*i;
+    pentry[i].user = 0;
+    pentry[i].rw = 1;
+    pentry[i].present = 1;
+  }
+  // page pe;
+  // memset(&pe, 0, sizeof(page));
+  // pe.frame = (0x1000 >> 12)*2;
+  // pe.user = 0; // 12 бит!
+  // pe.rw = 1;
+  // pe.present = 1;
+  // u4 size = sizeof(page);
+  //    konsole->LoadResolve("\n");
+  //   konsole->base(&pentry[2], 16);
+  //   konsole->LoadResolve("\n");
+  // konsole->base((u4*)&pe, 16);
+  // konsole->LoadResolve("\n");
+  entry[0] = ((unsigned int)pentry) | 3;
+  loadPageDirectory((unsigned int *)entry);
+  enablePaging();
+  // volatile const char *bfd = 0x0;
+  // bfd = "Q";
+  konsole->LoadResolve("[MMU] Paging is on!\n");
+}
+*/
 
 Chunck::Chunck() {
   this->ElementsCount = 0;
@@ -51,14 +89,12 @@ Chunck::Chunck() {
   this->SizeAvailable = 0;
 }
 
-KernelGC *KernelGC::LoadResolve(MMU *Object) {
+Heap *Heap::LoadResolve(MMU *Object) {
   for (auto &&chunk : Object->Maps) {
     if (chunk.Type == Avaliable) {
-      this->Heap.SizeAvailable = chunk.Length;
-      this->Heap.StartAddress = (void *)(chunk.Address + 300 + 1000000);
-      this->Pointers.AllocatedCount += 300 / sizeof(Pointer);
-      this->Pointers.Data = this->Heap.StartAddress;
-      this->Pointers.Sizeof = sizeof(Pointer);
+      this->Main.SizeAvailable = chunk.Length;
+      this->Main.StartAddress = (char *)(chunk.Address + 1000000);
+      this->Main.CurrentAddress = this->Main.StartAddress;
       konsole->LoadResolve("[MMU] Chunck founded!\n");
       break;
     }
@@ -66,24 +102,10 @@ KernelGC *KernelGC::LoadResolve(MMU *Object) {
   return nullptr;
 }
 
-void *KernelGC::rawmalloc(size_t size) {
-  if (this->Heap.SizeAvailable < size) {
-    return nullptr;
-  } else {
-    this->Heap.ElementsCount++;
-    this->Heap.Size += size;
-    this->Heap.SizeAvailable -= size;
-    char data[16];
-    konsole->LoadResolve("[KERNELGC] Raw allocating ");
-    konsole->LoadResolve(itoa(size, data, 10));
-    konsole->LoadResolve(" bytes\n");
-    return (void *)((char *)this->Heap.StartAddress + this->Heap.Size);
-  }
+void *malloc(size_t size) {
+  return gc->Kernel.AllocateResolve(&size);
 }
 
-void RelocArray::Add(void *Data) {
-  char *Address = (char *)this->Data;
-  Address += (this->Sizeof * this->Count);
-  memcpy(Address, Data, this->Sizeof);
-  konsole->LoadResolve("[KERNELGC] Adding new pointer\n");
-}
+void *operator new(size_t size) { return malloc(size); }
+
+void *operator new[](size_t size) { return malloc(size); }

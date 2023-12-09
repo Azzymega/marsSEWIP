@@ -11,3 +11,15 @@ using Achar = char;
 template <class T, class J> class LoadContradiction {
   virtual T LoadResolve(J Object) = 0;
 };
+
+class InternalContradiction {
+  virtual void InternalResolve() = 0;
+};
+
+template <class T, class J> class AllocateContradiction {
+  virtual T AllocateResolve(J Object) = 0;
+};
+
+template <class T, class J> class IntroduceContradiction {
+  virtual T IntroduceResolve() = 0;
+};

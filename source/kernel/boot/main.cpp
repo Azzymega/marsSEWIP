@@ -1,15 +1,17 @@
 #include "include/main.hpp"
 #include "../console/include/console.hpp"
 #include "include/memory.hpp"
+#include "include/paging.hpp"
 #include "include/panic.hpp"
 
 
 MultibootData *Header;
 Console *konsole;
-KernelGC *gc;
+MMU *gc;
 extern "C" u8 KernelStart;
 extern "C" u8 KernelEnd;
-
+u4 page_directory[1024] __attribute__((aligned(4096)));
+page first_page_table[1024] __attribute__((aligned(4096)));
 extern "C" void kernel_main(u4 MultibootMagic,
                             struct MultibootData *MultibootHeader) {
   Header = MultibootHeader;
@@ -31,20 +33,26 @@ extern "C" void kernel_main(u4 MultibootMagic,
   Controller.LoadResolve(MultibootHeader);
   MMU MemoryController = MMU();
   MemoryController.LoadResolve(&Controller);
-  MemoryController.GC.LoadResolve(&MemoryController);
-  gc = &MemoryController.GC;
-  Object<char> x = gc->malloc<char>(10);
-  x.Data = "Hello from managed garbage collector!\n";
-  console.LoadResolve(x.Data);
-  Object<char> y = gc->malloc<char>(10);
-  y.Data = "Hello from managed garbage collector! x2\n";
-  console.LoadResolve(y.Data);
-  Object<char> z = gc->malloc<char>(10);
-  z.Data = "Hello from managed garbage collector! x3\n";
-  console.LoadResolve(z.Data);
+  //MemoryController.Memory.LoadResolve(&MemoryController);
+  MemoryController.Kernel.LoadResolve(&MemoryController);
+  gc = &MemoryController;
+  const char* testMessage = gc->Kernel.AllocateResolve("Hello from managed copying GC!\n");
+  console.LoadResolve(testMessage);
+  u4* testInteger = gc->Kernel.AllocateResolve((u4)2023);
+  console.LoadResolve(itoa(*testInteger, str, 10));
 }
 
-extern "C" void __cxa_pure_virtual() {}
+extern "C" char *strcpy(char *s1, const char *s2)
+{
+    char *s1_p = s1;
+    while (*s1++ = *s2++)
+      ;
+    return s1_p;
+}
+
+extern "C" void __cxa_pure_virtual() {
+  konsole->LoadResolve("[CPU] Pure virtual function! HALT");
+}
 
 size_t strlen(const char *str) {
   size_t len = 0;
