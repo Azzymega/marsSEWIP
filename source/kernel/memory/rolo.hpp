@@ -29,6 +29,18 @@ struct Region : IntroduceContradiction<void, void>{
   void IntroduceResolve() override;
 };
 
+struct ArrayList {
+  u4* ItemsCount;
+  u4* AllocatedCount;
+  void* Entity;
+  ArrayList();
+  ArrayList(u4 Size);
+  void* Get(u4 Index);
+  void Add(void* Structure);
+  void Set(u4 Index, void* Structure);
+  void Remove(u4 Index);
+};
+
 struct Namespace : AllocateContradiction<u1 *, u1>,
                    AllocateContradiction<float *, float>,
                    AllocateContradiction<u8 *, u8>,

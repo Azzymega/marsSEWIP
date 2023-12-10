@@ -4,7 +4,6 @@
 #include "include/paging.hpp"
 #include "include/panic.hpp"
 
-
 MultibootData *Header;
 Console *konsole;
 MMU *gc;
@@ -33,21 +32,23 @@ extern "C" void kernel_main(u4 MultibootMagic,
   Controller.LoadResolve(MultibootHeader);
   MMU MemoryController = MMU();
   MemoryController.LoadResolve(&Controller);
-  //MemoryController.Memory.LoadResolve(&MemoryController);
+  // MemoryController.Memory.LoadResolve(&MemoryController);
   MemoryController.Kernel.LoadResolve(&MemoryController);
   gc = &MemoryController;
-  const char* testMessage = gc->Kernel.AllocateResolve("Hello from managed copying GC!\n");
-  console.LoadResolve(testMessage);
-  u4* testInteger = gc->Kernel.AllocateResolve((u4)2023);
-  console.LoadResolve(itoa(*testInteger, str, 10));
+  ArrayList *test = new ArrayList();
+  const char *listf = gc->Kernel.AllocateResolve("Hello from managed List!!\n");
+  const char *lists = gc->Kernel.AllocateResolve("Hello from managed AList!\n");
+  test->Add((void *)lists);
+  test->Add((void *)listf);
+  console.LoadResolve((const char *)test->Get(0));
+  console.LoadResolve((const char *)test->Get(1));
 }
 
-extern "C" char *strcpy(char *s1, const char *s2)
-{
-    char *s1_p = s1;
-    while (*s1++ = *s2++)
-      ;
-    return s1_p;
+extern "C" char *strcpy(char *s1, const char *s2) {
+  char *s1_p = s1;
+  while (*s1++ = *s2++)
+    ;
+  return s1_p;
 }
 
 extern "C" void __cxa_pure_virtual() {
